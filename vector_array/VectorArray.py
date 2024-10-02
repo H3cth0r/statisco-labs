@@ -70,3 +70,17 @@ class VectorArray:
         instance._array_pointer = None
         
         return instance
+
+def zeros(size, dtype=ctypes.c_double):
+    itemsize = ctypes.sizeof(dtype)
+    
+    # Allocate memory using mmap
+    buffer = mmap.mmap(-1, size * itemsize, 
+                       mmap.MAP_PRIVATE | mmap.MAP_ANONYMOUS, 
+                       mmap.PROT_READ | mmap.PROT_WRITE)
+    
+    # Create a ctypes array directly from the mmap buffer
+    array = (dtype * size).from_buffer(buffer)
+    
+    return array, buffer  # Return both array and buffer to manage memory
+

@@ -1,6 +1,6 @@
 import time
 
-from VectorArray import VectorArray
+from VectorArray import VectorArray, zeros
 import numpy as np
 
 def timed_method(func):
@@ -23,10 +23,20 @@ def load_single_numpy_array(size):
     vec_a = np.zeros(size, dtype=np.double)
     return vec_a
 
+@timed_method
+def load_single_vector_method(size):
+    vec_a, buffer= zeros(size)
+    return vec_a, buffer
+
 if __name__ == "__main__":
     size    = 10000000
-    res_1 = load_single_vector(size)
     res_2 = load_single_numpy_array(size)
+    res_1 = load_single_vector(size)
+    res_3, buffer = load_single_vector_method(size)
 
     print(res_1[:10])
     print(res_2[:10])
+    print(res_3[:10])
+
+    del res_3
+    buffer.close()
