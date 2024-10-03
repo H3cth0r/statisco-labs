@@ -28,15 +28,30 @@ def load_single_vector_method(size):
     vec_a, buffer= zeros(size)
     return vec_a, buffer
 
+va = {
+        "zeros" : zeros
+}
+
+@timed_method
+def load_from_dict(size):
+    vec_a, buffer= va["zeros"](size)
+    return vec_a, buffer
+
 if __name__ == "__main__":
     size    = 10000000
     res_2 = load_single_numpy_array(size)
     res_1 = load_single_vector(size)
     res_3, buffer = load_single_vector_method(size)
+    res_4, buffer1 = load_from_dict(size)
 
     print(res_1[:10])
     print(res_2[:10])
     print(res_3[:10])
+    print(res_4[:10])
+
 
     del res_3
     buffer.close()
+
+    del res_4
+    buffer1.close()
