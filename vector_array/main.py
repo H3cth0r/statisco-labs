@@ -1,6 +1,7 @@
 import time
 
 from VectorArray import VectorArray, zeros
+import varr
 import numpy as np
 
 def timed_method(func):
@@ -31,11 +32,15 @@ def load_single_vector_method(size):
 va = {
         "zeros" : zeros
 }
-
 @timed_method
 def load_from_dict(size):
     vec_a, buffer= va["zeros"](size)
     return vec_a, buffer
+
+@timed_method
+def using_varr(size):
+    arr = varr.zeros(size)
+    return arr
 
 if __name__ == "__main__":
     size    = 10000000
@@ -43,11 +48,13 @@ if __name__ == "__main__":
     res_1 = load_single_vector(size)
     res_3, buffer = load_single_vector_method(size)
     res_4, buffer1 = load_from_dict(size)
+    res_5 = using_varr(size)
 
     print(res_1[:10])
     print(res_2[:10])
     print(res_3[:10])
     print(res_4[:10])
+    print(res_5["as_array"]()[:10])
 
 
     del res_3
@@ -55,3 +62,5 @@ if __name__ == "__main__":
 
     del res_4
     buffer1.close()
+
+    res_5["cleanup"]()
