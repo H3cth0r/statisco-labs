@@ -15,7 +15,7 @@ def timed_method(func):
   return wrapper
 
 @timed_method
-def load_single_vector(size):
+def load_by_instance_VectorArray(size):
     vec_a = VectorArray.zeros(size)
     return vec_a
 
@@ -38,17 +38,17 @@ def load_from_dict(size):
     return vec_a, buffer
 
 @timed_method
-def using_varr(size):
+def using_more_complex_dict(size):
     arr = varr.zeros(size)
     return arr
 
 if __name__ == "__main__":
     size    = 10000000
-    res_2 = load_single_numpy_array(size)
-    res_1 = load_single_vector(size)
-    res_3, buffer = load_single_vector_method(size)
-    res_4, buffer1 = load_from_dict(size)
-    res_5 = using_varr(size)
+    res_1           = load_by_instance_VectorArray(size)
+    res_2           = load_single_numpy_array(size)
+    res_3, buffer   = load_single_vector_method(size)
+    res_4, buffer1  = load_from_dict(size)
+    res_5           = using_more_complex_dict(size)
 
     print(res_1[:10])
     print(res_2[:10])
