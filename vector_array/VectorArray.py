@@ -83,4 +83,3 @@ def zeros(size, dtype=ctypes.c_double):
     array = (dtype * size).from_buffer(buffer)
     
     return array, buffer  # Return both array and buffer to manage memory
-
