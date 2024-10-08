@@ -25,5 +25,14 @@ ctypes.memmove(code_address, code, len(code))
 additionC_type =  ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_int, ctypes.c_int)
 additionC = ctypes.cast(code_address+0x00, additionC_type)
 
-res = additionC(1, 4)
+substractionC_type = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_int, ctypes.c_int)
+substractionC = ctypes.cast(code_address+0x10, substractionC_type)
+
+res = additionC(3, 4)
+print(res)
+
+res = substractionC(5, 2)
+print(res)
+
+res = additionC(4, 4)
 print(res)
