@@ -22,12 +22,13 @@ typedef struct {
 } GenericArray;
 
 GenericArray* init_array(int dtype, size_t size) {
-    GenericArray *arr = (GenericArray *)malloc(sizeof(GenericArray));
-    if (!arr) {
+    GenericArray arr_dum;
+    GenericArray *arr = &arr_dum;
+    // GenericArray *arr = (GenericArray *)malloc(sizeof(GenericArray));
+    if (arr == NULL) {
       printf("Failed to allocate memory for GenericArray structure\n");
       return NULL;
     }
-    return NULL;
 
     // Initialize the structure
     arr->dtype = (Dtype)dtype;
@@ -35,22 +36,31 @@ GenericArray* init_array(int dtype, size_t size) {
 
     switch (arr->dtype) {
         case DTYPE_INT:
-          arr->data.int_data    = (int *)malloc(size * sizeof(int));
+          // arr->data.int_data    = (int *)malloc(size * sizeof(int));
+          int int_t;
+          arr->data.int_data    = &int_t;
           break;
         case DTYPE_FLOAT:
-          arr->data.float_data  = (float *)malloc(size * sizeof(float));
+          // arr->data.float_data  = (float *)malloc(size * sizeof(float));
+          float float_t;
+          arr->data.float_data  = &float_t;
           break;
         case DTYPE_DOUBLE:
-          arr->data.double_data = (double *)malloc(size * sizeof(double));
+          // arr->data.double_data = (double *)malloc(size * sizeof(double));
+          double double_t;
+          arr->data.double_data = &double_t;
           break;
         case DTYPE_CHAR:
-          arr->data.char_data   = (char *)malloc(size * sizeof(char));
+          // arr->data.char_data   = (char *)malloc(size * sizeof(char));
+          char char_t;
+          arr->data.char_data   = &char_t;
           break;
         default:
           free(arr);
           printf("Unknown data type\n");
           return NULL;
     }
+
 
     if (!arr->data.int_data && !arr->data.float_data && !arr->data.double_data && !arr->data.char_data) {
       free(arr);

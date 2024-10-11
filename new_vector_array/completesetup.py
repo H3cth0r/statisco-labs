@@ -9,7 +9,7 @@ path_o = "./build/temp.linux-x86_64-cpython-310/vectorops.o"
 # gcc -g -c vectorops.c -o vectorops.o
 result = subprocess.run(
     # ["gcc", "-g", "-c", "vectorops.c", "-o", "vectorops.o"],
-    ["gcc", "-g", "-shared", "-O2", "vectorops.c", "-o", "vectorops.o"],
+    ["gcc", "-g", "-shared", "-O", "vectorops.c", "-o", "vectorops.o"],
     stdout=subprocess.PIPE,  # Capture standard output
     stderr=subprocess.PIPE   # Capture standard error
 )

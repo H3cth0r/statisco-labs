@@ -10,6 +10,7 @@ in pkgs.mkShell {
     pythonPackages.pip
     pythonPackages.virtualenv
     pythonPackages.numpy
+    pkgs.gdb    # Add gdb here
   ];
 
   shellHook = ''
