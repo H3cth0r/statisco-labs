@@ -23,11 +23,11 @@ typedef struct {
 
 GenericArray* init_array(int dtype, size_t size) {
     GenericArray *arr = (GenericArray *)malloc(sizeof(GenericArray));
-    return NULL;
     if (!arr) {
       printf("Failed to allocate memory for GenericArray structure\n");
       return NULL;
     }
+    return NULL;
 
     // Initialize the structure
     arr->dtype = (Dtype)dtype;
