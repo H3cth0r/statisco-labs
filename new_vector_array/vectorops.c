@@ -83,7 +83,6 @@ void free_array(GenericArray *arr) {
     return;
 }
 
-
 void set_element(GenericArray *arr, size_t index, void *value) {
     if (index >= arr->size) {
         printf("Index out of bounds\n");
@@ -91,7 +90,8 @@ void set_element(GenericArray *arr, size_t index, void *value) {
     }
     switch (arr->dtype) {
         case DTYPE_INT:
-            arr->data.int_data[index] = *(int*)value;
+            // arr->data.int_data[index] = *(int*)value;
+            arr->data.int_data[index] = *((int*)value);
             break;
         case DTYPE_FLOAT:
             arr->data.float_data[index] = *(float*)value;
@@ -113,7 +113,7 @@ void* get_element(GenericArray *arr, size_t index) {
 
     switch (arr->dtype) {
         case DTYPE_INT:
-            return &arr->data.int_data[index];
+            return (int*)&arr->data.int_data[index];
         case DTYPE_FLOAT:
             return &arr->data.float_data[index];
         case DTYPE_DOUBLE:
