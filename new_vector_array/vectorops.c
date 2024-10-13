@@ -21,10 +21,10 @@ typedef struct {
     size_t size;
 } GenericArray;
 
-GenericArray* init_array(int dtype, size_t size) {
-    GenericArray arr_dum;
-    GenericArray *arr = &arr_dum;
+GenericArray* init_array(int dtype, size_t size, void* data, void* data_ptr) {
     // GenericArray *arr = (GenericArray *)malloc(sizeof(GenericArray));
+    // GenericArray *arr = (GenericArray *)PyMem_Malloc(sizeof(GenericArray));
+    GenericArray *arr = (GenericArray *) data;
     if (arr == NULL) {
       printf("Failed to allocate memory for GenericArray structure\n");
       return NULL;
@@ -37,23 +37,16 @@ GenericArray* init_array(int dtype, size_t size) {
     switch (arr->dtype) {
         case DTYPE_INT:
           // arr->data.int_data    = (int *)malloc(size * sizeof(int));
-          int int_t;
-          arr->data.int_data    = &int_t;
+          arr->data.int_data    = (int *) data_ptr;
           break;
         case DTYPE_FLOAT:
-          // arr->data.float_data  = (float *)malloc(size * sizeof(float));
-          float float_t;
-          arr->data.float_data  = &float_t;
+          arr->data.float_data  = (float *)malloc(size * sizeof(float));
           break;
         case DTYPE_DOUBLE:
-          // arr->data.double_data = (double *)malloc(size * sizeof(double));
-          double double_t;
-          arr->data.double_data = &double_t;
+          arr->data.double_data = (double *)malloc(size * sizeof(double));
           break;
         case DTYPE_CHAR:
-          // arr->data.char_data   = (char *)malloc(size * sizeof(char));
-          char char_t;
-          arr->data.char_data   = &char_t;
+          arr->data.char_data   = (char *)malloc(size * sizeof(char));
           break;
         default:
           free(arr);
@@ -86,7 +79,8 @@ void free_array(GenericArray *arr) {
         free(arr->data.char_data);
         break;
     }
-    free(arr);
+    free(arr); // Here is where the segmentation is being generated
+    return;
 }
 
 
