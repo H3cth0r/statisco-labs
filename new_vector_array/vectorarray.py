@@ -24,15 +24,14 @@ class GenericArray(ctypes.Structure):
 
 class VectorArray:
     def __init__(self, size, dtype=ctypes.c_int):
-        libc = ctypes.cdll.LoadLibrary(None)
-        mmap_function = libc.mmap
+        self.libc = ctypes.cdll.LoadLibrary(None)
+        mmap_function = self.libc.mmap
         mmap_function.restype = ctypes.c_void_p
         mmap_function.argtypes = (
             ctypes.c_void_p, ctypes.c_size_t,
             ctypes.c_int, ctypes.c_int,
             ctypes.c_int, ctypes.c_size_t
         )
-        # CODE_SIZE = 10000000
         CODE_SIZE = 10000
         code_address = mmap_function(None, 
                                      CODE_SIZE,
@@ -40,14 +39,14 @@ class VectorArray:
                                      mmap.MAP_PRIVATE | mmap.MAP_ANONYMOUS,
                                      -1, 0)
 
-        libc.malloc.argtypes = [ctypes.c_size_t]
-        libc.malloc.restype = ctypes.c_void_p
-        libc.free.argtypes = [ctypes.c_void_p]
+        self.libc.malloc.argtypes = [ctypes.c_size_t]
+        self.libc.malloc.restype = ctypes.c_void_p
+        self.libc.free.argtypes = [ctypes.c_void_p]
         ga_size = 100
-        genericArrPtr = libc.malloc(ga_size*ctypes.sizeof(GenericArray))
+        self.genericArrPtr = self.libc.malloc(ga_size*ctypes.sizeof(GenericArray))
 
-        dataPtr = libc.malloc(size*ctypes.sizeof(dtype))
-        if not dataPtr:
+        self.dataPtr = self.libc.malloc(size*ctypes.sizeof(dtype))
+        if not self.dataPtr:
             raise MemoryError("Failed to allocate memory for array data")
 
         if code_address == -1:
@@ -81,18 +80,13 @@ class VectorArray:
         elif dtype == ctypes.c_double:
             ctype_val = 2
 
-        self.array = self._init_array(ctype_val, size, genericArrPtr, dataPtr)
-        # self.array = ctypes.cast(genericArrPtr, ctypes.POINTER(GenericArray)) # This can be commented
+        self.array = self._init_array(ctype_val, size, self.genericArrPtr, self.dataPtr)
         if not self.array: raise MemoryError("Failed to initialize array")
         print("Array initialized successfully")
 
     def set(self, index, value): 
         value_ptr = ctypes.pointer(ctypes.c_int(value))
         self._set_element(self.array, index, value_ptr)
-    # def get(self, index): 
-    #     res = self._get_element(self.array, index) 
-    #     print(dir(res))
-    #     return res
     def get(self, index):
         res_ptr = self._get_element(self.array, index)
         if not res_ptr:
@@ -110,6 +104,8 @@ class VectorArray:
             raise ValueError("Unknown data type")
 
     def __del__(self):
-        print("\n\n")
-        self._free_array(self.array)
-        print("Array freed successfully")
+        if hasattr(self, 'libc'):
+            if hasattr(self, 'genericArrPtr'):
+                self.libc.free(self.genericArrPtr)
+            if hasattr(self, 'dataPtr'):
+                self.libc.free(self.dataPtr)

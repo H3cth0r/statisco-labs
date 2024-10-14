@@ -113,7 +113,7 @@ void* get_element(GenericArray *arr, size_t index) {
 
     switch (arr->dtype) {
         case DTYPE_INT:
-            return (int*)&arr->data.int_data[index];
+            return &arr->data.int_data[index];
         case DTYPE_FLOAT:
             return &arr->data.float_data[index];
         case DTYPE_DOUBLE:
