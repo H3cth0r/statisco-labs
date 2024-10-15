@@ -88,7 +88,7 @@ void* get_element(ArrCo *arr, size_t index) {
     return NULL;
 }
 
-void set_all_elements(ArrCo *arr, size_t index) {
+void set_all_elements(ArrCo *arr, size_t index, void *value) {
     for (size_t i = 0; i < arr->size; i++) {
         set_element(arr, i, value);
     }
