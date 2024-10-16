@@ -88,9 +88,22 @@ void* get_element(ArrCo *arr, size_t index) {
     return NULL;
 }
 
-void set_all_elements(ArrCo *arr, size_t index, void *value) {
+void set_all_elements(ArrCo *arr, void *value) {
     for (size_t i = 0; i < arr->size; i++) {
-        set_element(arr, i, value);
+        switch (arr->dtype) {
+          case DTYPE_INT:
+            arr->data.int_data[i]     = *((int*)value);
+            break;
+          case DTYPE_FLOAT:
+            arr->data.float_data[i]   = *((float*)value);
+            break;
+          case DTYPE_DOUBLE:
+            arr->data.double_data[i]  = *((double*)value);
+            break;
+          case DTYPE_CHAR:
+            arr->data.char_data[i]     = *((char*)value);
+            break;
+        }
     }
 }
 

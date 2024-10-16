@@ -85,6 +85,10 @@ class array:
         elif dtype == DTYPE_DOUBLE: return ctypes.cast(res_ptr, ctypes.POINTER(ctypes.c_double)).contents.value
         elif dtype == DTYPE_CHAR: return ctypes.cast(res_ptr, ctypes.POINTER(ctypes.c_char)).contents.value
         else: raise ValueError("Unknown data type")
+    def ones(self): 
+        value_ptr   = ctypes.pointer(ctypes.c_int(1))
+        self._set_all_elements(self.array, value_ptr)
+        
     def __del__(self):
         if hasattr(self, 'libc'):
             if hasattr(self, 'arrcoPtr'): self.libc.free(self.arrcoPtr)
