@@ -11,3 +11,5 @@ if __name__ == "__main__":
     print(res)
     res = arr.get(90)
     print(res)
+    res = arr.tolist()
+    print(res)

@@ -1,6 +1,6 @@
 import ctypes
 import mmap
-from byteArrCo import code, text_start, init_array_address, set_element_address, get_element_address, set_all_elements_address
+from byteArrCo import code, text_start, init_array_address, set_element_address, get_element_address, set_all_elements_address 
 
 DTYPE_INT = 0
 DTYPE_FLOAT = 1
@@ -88,8 +88,14 @@ class array:
     def ones(self): 
         value_ptr   = ctypes.pointer(ctypes.c_int(1))
         self._set_all_elements(self.array, value_ptr)
-        
     def __del__(self):
         if hasattr(self, 'libc'):
             if hasattr(self, 'arrcoPtr'): self.libc.free(self.arrcoPtr)
             if hasattr(self, 'dataPtr'): self.libc.free(self.dataPtr)
+    def tolist(self):
+        dtype = self.array.contents.dtype
+        if dtype == DTYPE_INT: return self.array.contents.data.int_data[:self.array.contents.size]
+        elif dtype == DTYPE_FLOAT: return self.array.contents.data.float_data[:self.array.contents.size]
+        elif dtype == DTYPE_DOUBLE: return self.array.contents.data.double_data[:self.array.contents.size]
+        elif dtype == DTYPE_CHAR: return self.array.contents.data.char_data[:self.array.contents.size]
+        else: raise ValueError("Unknown data type")
