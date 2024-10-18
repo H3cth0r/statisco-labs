@@ -23,6 +23,7 @@ class ArrCoStruct(ctypes.Structure):
     ]
 
 class array:
+    max_print = 100
     def __init__(self, size, dtype=ctypes.c_double):
         self.libc               = ctypes.cdll.LoadLibrary(None)
         mmap_function           = self.libc.mmap
@@ -99,3 +100,31 @@ class array:
         elif dtype == DTYPE_DOUBLE: return self.array.contents.data.double_data[:self.array.contents.size]
         elif dtype == DTYPE_CHAR: return self.array.contents.data.char_data[:self.array.contents.size]
         else: raise ValueError("Unknown data type")
+    def __str__(self):
+        dtype, size = self.array.contents.dtype, self.array.contents.size
+        if dtype == DTYPE_INT: type_str = 'int32'
+        elif dtype == DTYPE_FLOAT: type_str = 'float32'
+        elif dtype == DTYPE_DOUBLE: type_str = 'float64'
+        elif dtype == DTYPE_CHAR: type_str = 'char'
+        else: type_str = 'Unknown'
+        if size <= self.max_print:
+            data        = self.tolist()
+            data_str    = ', '.join(map(str, data))
+        else:
+            start       = self.max_print // 8
+            end         = size - start
+            if dtype == DTYPE_INT:
+                left    = self.array.contents.data.int_data[:start]
+                right   = self.array.contents.data.int_data[end:size]
+            elif dtype == DTYPE_FLOAT: 
+                left    = self.array.contents.data.float_data[:start]
+                right   = self.array.contents.data.float_data[end:size]
+            elif dtype == DTYPE_DOUBLE: 
+                left    = self.array.contents.data.double_data[:start]
+                right   = self.array.contents.data.double_data[end:size]
+            elif dtype == DTYPE_CHAR:
+                left    = self.array.contents.data.char_data[:start]
+                right   = self.array.contents.data.char_data[end:size]
+            data_str = ', '.join(map(str, left)) + ', ...,' + ', '.join(map(str, right))
+        return f"array([{data_str}], dtype={type_str})"
+    def __repr__(self):return self.__str__()
