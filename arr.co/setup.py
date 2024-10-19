@@ -7,8 +7,8 @@ python_include  = sysconfig.get_paths()['include']
 python_libs     = python_include.replace('include', 'lib')
 
 result = subprocess.run(
-    # ["gcc", "-g", "-shared", "-O", "arrco.c", "-o", "arrco.o"],
-    ["gcc", "-I", python_include, "-L", python_libs, "-g", "-shared", "-O", "arrco.c", "-o", "arrco.o"],
+    ["gcc", "-g", "-shared", "-O", "arrco.c", "-o", "arrco.o"],
+    # ["gcc", "-I", python_include, "-L", python_libs, "-g", "-shared", "-O", "arrco.c", "-o", "arrco.o"],
     stdout=subprocess.PIPE,
     stderr=subprocess.PIPE
 )
