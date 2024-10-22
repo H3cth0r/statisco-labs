@@ -1,3 +1,47 @@
+# Allocator
+## Main Funcs
+- Lend some memory.
+- Free memory.
+
+
+## Types of allocation
+- Linear Allocation: moving the pointer forward and poping when freeing.
+- Using Bitmaps: Using a "bitmap" to keep track of allocated blocks. 
+Basically its an "array" where bit represents if that memory block is already allocated or not.
+If allocated 1 else 0.
+    - init memory, defining total dynamic memory size.
+    - Construct bitmap: 1 bit per block.
+A block can be of any size: 1 byte, 1 mb, 1gb, etc.
+
+### Granularity vs Space Ocupation has an important part in this topic
+- 1 byte: finest Granularity, large space occup.
+- larger: coarser Granularity, less space occup.
+
+## malloc
+```
+malloc(num_bytes)
+let b = ceil(num_bytes / bytes_per_block)
+```
+
+## Allocation Policies
+- First Fit: scan until find any spot large enough to contain data.
+- Best fit: scan whole bitmap, return smalles spot large enough to contain data.
+
+## free()
+Will set bitmap sets to zero.
+
+## Stack Memory
+- Automatically handled by the compiler.
+- Very fast alloaction.
+- Very fast cleanup.
+
+- Fixed amount of memory.
+- Fixed sizes.
+- Fixed lifetimes.
+
+
+
+
 # Least Recently Used (LRU) Allocator
 
 Algorithm that tracks memory usage by keeping track of how recently each block of
