@@ -44,3 +44,9 @@ least recently used block of memory to satisfy the new memory request.
 4. Freeing the Cache(`free_cache`):
     - When the system runs out of memory or resources, the allocator can clear the entire cache by calling
     `free_cache()`. This deallocates all cached buffers, effectively resetting the cache.
+
+## Concepts
+- dataclasses python: class typically containing mainly data. Attributes require typing. You can set default values.
+- dataclasses frozen: protect all fields so that they can be modified only in a way we want. Frozen True automatically
+adds `__deleteattr__` and `__setattr__` methods for each field so that they are proected from deletition or updates
+after initialization. Others wont be able to add new fields as well.
