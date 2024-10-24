@@ -1,6 +1,6 @@
 #include "heap.h"
 
-int offset = sizeof(int) * 2;
+uint offset = 9;
 
 // ========================================================
 // This function initializes a new heap structure, provides
@@ -10,7 +10,7 @@ int offset = sizeof(int) * 2;
 // the heap is to make sure the same constant is used when 
 // allocating memory for your heap
 // ========================================================
-void init_heap(heap* heap, int start) {
+void init_heap(heap* heap, long start) {
     // Creating a initial region, this is the "wilderness" chunk
     // The heap starts as just one big chunk of allocatable memory
     node_t* init_region   = (node_t *) start;
@@ -23,8 +23,8 @@ void init_heap(heap* heap, int start) {
     // add the region to the correct bin and setup the heap struct
     add_node(heap->bins[get_bin_index(init_region->size)], init_region);
 
-    heap->start           = start;
-    heap->end             = start + HEAP_INIT_SIZE;
+    heap->start           = (void *) start;
+    heap->end             = (void *) (start + HEAP_INIT_SIZE);
 }
 
 // ========================================================
@@ -36,13 +36,13 @@ void init_heap(heap* heap, int start) {
 // ========================================================
 void *heap_alloc(heap_t *heap, size_t size) {
     // First get the bin index where this chunk size should be in
-    int index     = get_bin_index(size);
+    uint index     = get_bin_index(size);
 
     // Use this bin to try and find a good fitting chunk
     bin_t *temp   = (bin_t *) heap->bins[index];
     node_t *found = get_best_fit(temp, size);
 
-    // While no chunk if found advance through the bins until
+    // While no chunk is found advance through the bins until
     // find a chunk or get to the wilderness
     while (found == NULL) {
         if (index + 1 >= BIN_COUNT) return NULL;
@@ -56,8 +56,8 @@ void *heap_alloc(heap_t *heap, size_t size) {
     // return the chunk
     if ((found->size - size) > (overhead + MIN_ALLOC_SZ)) {
         // Do the math where to split at, then set its metadata
-        node_t *split   = ((char *) found + overhead) + size;
-        split->size     = found->size - size - (overhead);
+        node_t *split   = (node_t *) (((char *) found + sizeof(node_t) + sizeof(footer_t)) + size);
+        split->size     = found->size - size - sizeof(node_t) - sizeof(footer_t);
         split->hole     = 1;
 
         // Create a footer for the split
@@ -65,7 +65,7 @@ void *heap_alloc(heap_t *heap, size_t size) {
 
         // Now we need to get the new index for this split chunk
         // place it in the correct bin
-        int new_idx     = get_bin_index(split->size);
+        uint new_idx     = get_bin_index(split->size);
         add_node(heap->bind[new_idx], split);
 
         found->size     = size; // set the found chunk size
@@ -79,7 +79,7 @@ void *heap_alloc(heap_t *heap, size_t size) {
     // or contracted
     node_t *wild  = get_wilderness(heap);
     if (wild->size < MIN_WILDERNESS) {
-        int success = expand(heap, 0x1000);
+        uint success = expand(heap, 0x1000);
         if (success == 0) return NULL;
     } else if (wild->size > MAX_WILDERNESS) {
         contract(heap, 0x1000);
@@ -108,7 +108,7 @@ void heap_free(heap_t *heap, void *p) {
     // then there is no need to coalesce so just it in the right 
     // list
     node_t *head = (node_t *) ((char *) p - offset);
-    if (head == heap->start) {
+    if (head == (node_t *) (uintptr_t) heap->start) {
         head->hole = 1;
         add_node(heap->bins[get_bin_index(head->size)], head);
         return;
@@ -119,8 +119,9 @@ void heap_free(heap_t *heap, void *p) {
     // start of the head node to get the footer of the previous node (which gives us
     // the header pointer). To get the next node we simply get the footer
     // and add the sizeof(footer_t)
-    node_t *next = (node_t *) ((char *) get_foot(head) + sizeof(footer_t));
-    node_t *prev = (node_t *) * ((int *) ((char *) head - sizeof(footer_t)));
+    node_t * next   = (node_t *) ((char *) get_foot(head) + sizeof(footer_t));
+    footer_t *f     = (footer_t *) ((char *) head - sizeof(footer_t));
+    node_t *prev    = f->header;
 
     // If the previous node is a hole we can coalese
     if (prev->hole) {
@@ -130,7 +131,8 @@ void heap_free(heap_t *heap, void *p) {
 
         // re-calculate the size of the node and recreate a footer
         prev->size += overhead + head->size;
-        create_foot(prev);
+        new_foot = get_foot(head);
+        new_foot->header = prev;
 
         // previous is now the node we are working with, head to 
         // prev because the next if statement will coalesce with the
@@ -154,8 +156,8 @@ void heap_free(heap_t *heap, void *p) {
         next->size = 0;
         next->hole = 0;
 
-        // make the new footer
-        create_foot(head);
+        new_foot = get_foot(head);
+        new_foot->header = head;
     }
 
     // This chunk is now a hole, then put it in the right bin
@@ -163,10 +165,12 @@ void heap_free(heap_t *heap, void *p) {
     add_node(heap->bins[get_bin_index(head->size)], head);
 }
 
-int expand(heap_t *, size_t sz) {
+int expand(heap_t *heap, size_t sz) {
+    return 0;
 }
 
 void contract(heap_t *heap, size_t sz) {
+    return;
 }
 
 // ========================================================
@@ -176,8 +180,8 @@ void contract(heap_t *heap, size_t sz) {
 // then for anything above 8 it bins using the log base 2 of
 // the size.
 // ========================================================
-int get_bin_index(size_t sz) {
-    int index = 0;
+uint get_bin_index(size_t sz) {
+    uint index = 0;
     sz = sz < 4 ? 4 : sz;
     while (sz >>= 1) index ++;
     index -= 2;
@@ -211,12 +215,3 @@ node_t *get_wilderness(heap_t *heap) {
     footer_t *wild_foot = (footer_t *) ((char *) heap->end - sizeof(footer_t));
     return wild_foot->header;
 }
-
-
-Reopen the hira with a comment
-raise subtask on jira (more)
- hfserver
-
-
-
- priority score esc
