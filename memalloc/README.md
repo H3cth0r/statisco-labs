@@ -167,3 +167,81 @@ header_t *get_free_block(size_t size) {
     return NULL;
 }
 ```
+
+## Free
+First must determine if the block to be freed is at the end of the heap. 
+If it is, we can release it to the OS. Otherwise, all we do is mark it
+"free" hoping to reuse it later.
+```
+void free (void *block) {
+    header_t *header, *tmp;
+    void *programbreak;
+
+    if (!block) return;
+    pthread_mutex_lock(&global_malloc_lock);
+    header = (header_t *) block - 1;
+
+    programbreak = sbrk(0);
+    if ((char *) block + header->s.size == programbreak) {
+        if (heade == tail) {
+            head = tail = NULL;
+        } else {
+            tmp = head;
+            while (tmp) {
+                if (tmp->s.next == tail) {
+                    tmp->s.next = NULL;
+                    tail = tmp->s.next;
+                }
+                tmp = tmp->s.next;
+            }
+        }
+        sbrk(0 - sizeof(header_t) - header->s.size);
+        pthread_mutex_unlock(&global_malloc_lock);
+        return;
+    }
+    header->s.is_free = 1;
+    pthread_mutex_unlock(&global_malloc_lock);
+}
+```
+
+## calloc
+allocates memory for and array of num elements of nsize bytes each 
+and returns a pointer to the allocated memory. Addictionally, the 
+memory is al set to zeroes.
+```
+void *calloc(size_t num, size_t nsize) {
+    size_t size;
+    void *block;
+    if (!num || !nsize) return NULL;
+    size = num * nsize;
+    if (nsize != size / num)  return NULL;
+    block = malloc(size);
+    if (!block) return NULL;
+    memset(block, 0, size);
+    return block;
+}
+```
+
+## realloc()
+Changes the size of the given memory block to the size given.
+```
+void *realloc (void *block, size_t size) {
+    header_t *header;
+    void *ret;
+    if (!block || !size) return malloc(size);
+    header = (header_t*)block - 1;
+    if (header->s.size >= size) return block;
+    ret = malloc(size);
+    if (ret) {
+        memcpy(ret, block, header->s.size);
+        free(block);
+    }
+    return ret;
+}
+```
+First get the blocks header and see if the block already has the size
+to accomodate the requested size. If it does, there's nothing to be done.
+
+If the current block does not have the requested size, then we call malloc 
+to get a block of the requested size, and relocate contents to the new
+bigger to the bigger block using memcpy. The old memory block is then freed.
