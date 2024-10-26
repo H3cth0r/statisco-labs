@@ -117,5 +117,82 @@ void Free(void *ptr) {
     }
 }
 
-void *Calloc(size_t nmembm size_t szo) {
+void *Calloc(size_t nmemb size_t szo) {
+    if (szo == 0 || nmemb == 0) return NULL;
+    size sz = nmemb*szo;
+    if (head == NULL) {
+        head = mmap(NULL, sizeof(memory_header) + sz, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
+        head->page_header   =  head;
+        head->prev_block    = NULL;
+        head->next_block    = NULL;
+        head->size          = sz;
+        head->total_size    = roundup(sizeof(memory_header) + sz, PAGESIZE);
+        tail                = head;
+        return ((char *) head) + sizeof(memory_header);
+    }
+    for (memory_header *ptr=head; ptr != NULL; ptr = ptr->next_block) {
+        if (ptr->size == 0 && ptr->total_size >= sizeof(memory_header) + sz ) {
+            ptr->size       = sz;
+            memset(((char*) ptr) + sizeof(memory_header), 0, sz);
+            return ((char *) ptr) + sizeof(memory_header);
+        }
+        if(ptr->total_size >= roundup(sizeof(memory_header) + ptr->size, ALIGNMENT) + sizeof(memory_header) + sz) {
+            memory_header *n_block = (memory_header *) (((char *) ptr) + roundup(sizeof(memory_header) + ptr->size, ALIGNMENT));
+            if(((uintptr_t) n_block) % PAGESIZE >= sizeof(memory_header)) {
+                n_block->prev_block   = ptr;
+                n_block->next_block   = ptr->next_block;
+                if (tail == ptr) tail = n_block;
+                else ptr->next_block->prev_block = n_block;
+                ptr->next_block       = n_block;
+                n_block->page_header  = ptr->page_header;
+                n_block->size         = sz;
+                n_block->total_size   = ptr->total_size - roundup(sizeof(memory_header) + ptr->size, ALIGNMENT);
+                ptr->total_size       = roundup(sizeof(memory_header) + ptr->size, ALIGNMENT);
+                memset(((char*) n_block) + sizeof(memory_header), 0, sz);
+                return ((char *) n_block) + sizeof(memory_header);
+            }
+        }
+    }
+    memory_header *n_block  = mmap(NULL, sizeof(memory_header) + sz, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
+    n_block->page_header    = n_block;
+    n_block->prev_block     = tail;
+    tail->next_block        = n_block;
+    tail                    = n_block;
+    n_block->total_size     = roundup(sizeof(memory_header) + sz, PAGESIZE);
+    n_block->size           = sz;
+    return ((char*) n_block) + sizeof(memory_header);
+}
+
+void *Realloc(void *ptr, size_t nsize) {
+    if (ptr == NULL) return Malloc(nsize);
+    if (nsize == 0) {
+        Free(ptr);
+        return NULL;
+    }
+    memory_header* act_ptr = (memory_header*) (((char*) ptr) - sizeof(memory_header));
+    if (nsize <= act_ptr->total_size - sizeof(memory_header)) {
+        act_ptr->size =  nsize;
+        return ptr;
+    }
+    char *rptr (char *) Malloc(nsize);
+    memcpy(rptr, (char *)ptr, act_ptr->size);
+    Free(ptr);
+    return rptr;
+}
+void *Reallocarray(void *ptr, size_t nmemb, size_t szo) {
+    if (ptr == NULL) return Calloc(nmemb, szo);
+    if (nmemb == 0 || szo == 0) {
+        Free(ptr);
+        return NULL;
+    }
+    memory_header* act_ptr = (memory_header*) (((char*) ptr) - sizeof(memory_header));
+    if(nmemb*szo <= act_ptr->total_size - sizeof(memory_header)) {
+        if(act_ptr->size < nmemb*szo) memset(((char*) ptr) + act_ptr->size, 0, nmemb*szo - act_ptr->size);
+        act_ptr->size = nmemb * szo;
+        return ptr;
+    }
+    char *rptr = (char *) Calloc(nmemb, szo);
+    memcpy(rptr, (char *) ptr, act_ptr->size);
+    Free(ptr);
+    return rptr;
 }
