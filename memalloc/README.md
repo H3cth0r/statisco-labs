@@ -245,3 +245,9 @@ to accomodate the requested size. If it does, there's nothing to be done.
 If the current block does not have the requested size, then we call malloc 
 to get a block of the requested size, and relocate contents to the new
 bigger to the bigger block using memcpy. The old memory block is then freed.
+
+## Compiling
+Compile as a libary file:
+```
+gcc -o memalloc.so -fPIC -shared memalloc.c
+```
