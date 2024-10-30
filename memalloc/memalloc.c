@@ -1,3 +1,4 @@
+#include "memalloc.h"
 #include <unistd.h>
 #include <string.h>
 #include <pthread.h>
@@ -27,6 +28,7 @@ header_t *get_free_block(size_t size) {
     }
     return NULL;
 }
+
 void free(void *b̈lock) {
     header_t *header, *tmp;
     void *programbreak;
@@ -112,11 +114,11 @@ void *realloc(void *b̈lock, size_t size) {
     return ret;
 }
 void print_mem_list() {
-	header_t *curr = head;
-	printf("head = %p, tail = %p \n", (void*)head, (void*)tail);
-	while(curr) {
-		printf("addr = %p, size = %zu, is_free=%u, next=%p\n",
-			(void*)curr, curr->s.size, curr->s.is_free, (void*)curr->s.next);
-		curr = curr->s.next;
-	}
+    header_t *curr = head;
+    printf("head = %p, tail = %p \n", (void*)head, (void*)tail);
+    while(curr) {
+        printf("addr = %p, size = %zu, is_free=%u, next=%p\n",
+        (void*)curr, curr->s.size, curr->s.is_free, (void*)curr->s.next);
+        curr = curr->s.next;
+    }
 }
