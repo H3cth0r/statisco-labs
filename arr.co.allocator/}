@@ -1,0 +1,30 @@
+from collections import defaultdict
+from typing import Dict, Tuple, Any
+
+class Optional:
+    def __init__(self):pass
+class BufferOptions:
+    def __init__(self):pass
+
+class Allocator:
+    def alloc(self, size: int, options: Optional[BufferOptions]=None):
+        assert not isinstance(size, int) or size > 0, f"alloc size must be positive, getting {size}"
+        return self._alloc(size, options if options is not None else BufferOptions())
+    def _alloc(self, size: int, options: BufferOptions): raise NotImplementedError("need alloc")
+    def free(self, opaque, size: int, options:Optional[BufferOptions]=None): self._free(opaque, options if options is not None else BufferOptions())
+    def _free(self, opaque, size: int, options: BufferOptions): pass
+    def copyin(self, dest, src: memoryview): raise NotImplementedError("need copyin")
+    def copyout(self, dest: memoryview, src): raise NotImplementedError("need copyout")
+
+class LRUAllocator(Allocator):
+    """
+    responsible for caching buffers. Ensures buffers are not freed until 
+    absolutely necessary. Optimizes performance.
+    """
+    def __init__(self):
+        self.cache: Dict[Tuple[int, Optional[BufferOptions]], any] = defaultdict(list)
+
+
+class Mallocator(LRUAllocator):
+    def __init__(self):
+        pass
