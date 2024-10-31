@@ -251,3 +251,40 @@ Compile as a libary file:
 ```
 gcc -o memalloc.so -fPIC -shared memalloc.c
 ```
+
+## Main Output
+```
+Test 1: Basic malloc and free
+Allocated array and filled with values: 
+1 2 3 4 5 
+head = 0x1175000, tail = 0x1175418 
+addr = 0x1175000, size = 1024, is_free=0, next=0x1175418
+addr = 0x1175418, size = 20, is_free=0, next=(nil)
+After freeing:
+head = 0x1175000, tail = 0x1175000 
+addr = 0x1175000, size = 1024, is_free=0, next=(nil)
+
+Test 2: calloc
+Calloc'd array (should be all zeros):
+00000
+head = 0x1175000, tail = 0x1175418 
+addr = 0x1175000, size = 1024, is_free=0, next=0x1175418
+addr = 0x1175418, size = 20, is_free=0, next=(nil)
+After freeing:
+head = 0x1175000, tail = 0x1175000 
+addr = 0x1175000, size = 1024, is_free=0, next=(nil)
+
+Test 3: realloc
+Original array:
+123
+Reallocated array:
+12345
+head = 0x1175000, tail = 0x117543c 
+addr = 0x1175000, size = 1024, is_free=0, next=0x1175418
+addr = 0x1175418, size = 12, is_free=1, next=0x117543c
+addr = 0x117543c, size = 20, is_free=0, next=(nil)
+After freeing:
+head = 0x1175000, tail = 0x1175418 
+addr = 0x1175000, size = 1024, is_free=0, next=0x1175418
+addr = 0x1175418, size = 12, is_free=1, next=(nil)
+```
