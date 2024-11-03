@@ -1,5 +1,6 @@
-from typing import Optional, Union, Dict, Any, List
-import os, sqlite3, contextlib, pickle, tempfile, ctypes, subprocess, pathlib, platform
+from typing import Optional, Union, Dict, Any, List, Callable
+import os, sqlite3, contextlib, pickle, tempfile, ctypes, subprocess, pathlib, platform, time
+# from source_code import Allocator, MallocAllocator
 
 def getenv(key: str, default=0): return type(default)(os.getenv(key, default))
 
@@ -71,3 +72,55 @@ class ClangCompiler(Compiler):
             subprocess.check_output(['gcc', '-shared', *self.args, '-O2', '-Wall', '-Werror', '-x', 'c', '-fPIC', '-ffreestanding', '-nostdlib', 
                                      '-', '-o', str(output_file.name)], input=src.encode('utf-8'))
             return pathlib.Path(output_file.name).read_bytes()
+
+def cpu_time_execution(cb, enable):
+    if enable: st = time.perf_counter()
+    cb()
+    if enable: return time.perf_counter()-st
+
+class ClangProgram:
+    def __init__(self, name:str, lib:bytes):
+        # if DEBUG >= 6: cpu_objdump(lib)
+        self.name, self.lib = name, lib
+        with tempfile.NamedTemporaryFile(delete=True) as cached_file_path:
+            pathlib.Path(cached_file_path.name).write_bytes(lib)
+            self.fxn = ctypes.CDLL(str(cached_file_path.name))[name]
+    def __call__(self, *bufs, vals=(), wait=False): return cpu_time_execution(lambda: self.fxn(*bufs, *vals), enable=wait)
+
+
+# class TensorCore:
+#     dims: Tuple[int, int, int]
+#     dtype_in: DType
+#     dtype_out: DType
+#     threads: List[Tuple[int, int]]
+#     reduce_axes: List[Tuple[int, int]]
+#     @property
+#     def early_upcast_axes(self) -> List[Tuple[int, int]]:
+#         return [(d,self.dims[d]//sz) for d,sz in [(dim,prod(sz for d,sz in self.threads if d==dim)) for dim in range(2)] if self.dims[d]>sz]
+#     upcast_axes: Tuple[List[Tuple[int,int]], List[Tuple[int,int]], List[Tuple[int,int]]] # list of (TC dim,amt) that upcast A, B and C
+#     st1_pattern: Optional[Tuple[Tuple[Tuple[int,int], ...], Tuple[Tuple[int,int], ...]]] = None # pattern to fix shapetracker for A
+#     st2_pattern: Optional[Tuple[Tuple[Tuple[int,int], ...], Tuple[Tuple[int,int], ...]]] = None # pattern to fix shapetracker for B
+#     expanded_shape: Optional[Tuple[int, ...]] = None
+#     opts_seq: Tuple[str,str] = ("UP","LC") # upcast input, local the thread pattern
+#     def __str__(self): return "_".join(["WMMA"] + list(map(str, self.dims)) + [self.dtype_in.name, self.dtype_out.name])
+# class Renderer:
+#     device: str = ""
+#     suffix: str = ""
+#     supports_float4: bool = True
+#     has_local: bool = True
+#     has_shared: bool = True
+#     global_max: Optional[Tuple[int, ...]] = (0x8FFFFFFF,) * (3)
+#     local_max: Optional[Tuple[int, ...]] = (0x8FFFFFFF,) * (3)
+#     shared_max: int = 32768
+#     tensor_cores: List[TensorCore] = []
+#     extra_matcher: Any = None
+#     code_for_op: Dict[op, Callable] = {}
+# class Compiled:
+#     def __init__(self, device:str, allocator:Allocator, renderer:Optional[Renderer], compiler:Optional[Compiler], runtime, graph=None):
+#         self.dname, self.allocator, self.compiler, self.runtime, self.graph = device, allocator, compile or Compiler(), runtime, graph
+#         self.renderer = renderer or Renderer
+#     def synchronize(self): pass
+# class ClangDevice(Compiled):
+#     def __init__(self, device:str):
+#         # tinygrad.runtime.graph.clang import ClangGraph
+#         super().__init__(device, MallocAllocator, Cla)
