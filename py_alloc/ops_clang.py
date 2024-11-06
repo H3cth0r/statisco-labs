@@ -1,6 +1,7 @@
-from typing import Optional, Union, Dict, Any, List, Callable
+from typing import Optional, Union, Dict, Any, List, Callable, ClassVar
 import os, sqlite3, contextlib, pickle, tempfile, ctypes, subprocess, pathlib, platform, time
-from source_code import BufferOptions, ImageDType, PtrDType
+from source_code import BufferOptions, ImageDType, PtrDType, MallocAllocator,flat_mv
+from dataclasses import replace
 
 def getenv(key: str, default=0): 
     """
@@ -200,6 +201,15 @@ class ClangProgram:
         """
         return cpu_time_execution(lambda: self.fxn(*bufs, *vals), enable=wait)
 
+class GlobalCounters:
+    global_ops: ClassVar[int] = 0
+    global_mem: ClassVar[int] = 0
+    time_sum_s: ClassVar[float] = 0.0
+    kernel_count: ClassVar[int] = 0
+    mem_used: ClassVar[int] = 0
+    @staticmethod
+    def reset(): GlobalCounters.global_ops, GlobalCounters.global_mem, GlobalCounters.time_sum_s, GlobalCounters.kernel_count = 0,0,0.0,0
+
 class Buffer:
     def __init__(self, device:str, size:int, dtype:DType, opaque:Any=None, options=Optional[BufferOptions]=None,
                  initial_value=Optional[bytes]=None, lb_refcount=0, base:Optional[Buffer]=None, offset:int=0, preallocate=False):
@@ -219,6 +229,68 @@ class Buffer:
             assert device == base.device, "base must have the same device"
             self._base = base
         if preallocate: self. allocate()
+    @property
+    def base(self) -> Buffer: return self._base if self._base is not None else self
+    @property
+    def lb_refcount(self):return self.base._lb_refcount
+    def ref(self, cnt): self.base._lb_refcount += cnt
+    def is_allocated(self) -> bool: return hasattr(self, '_buf')
+    def ensure_allocated(self) -> Buffer: return self.allocate() if not self.is_allocated() else self
+    def allocate(self, opaque=None, external_ptr=None) -> Buffer:
+        assert not self.is_allocated(), "can't allocate already allocated buffer"
+        # Maybe this will break
+        self.allocator = MallocAllocator()
+        if external_ptr is not None: 
+            self.options = replace(self.options, external_ptr=external_ptr) if self.options else BufferOptions(external_ptr=external_ptr)
+        if self._base is not None: 
+            self._base.ensure_allocated()
+            assert hasattr(self.allocator, "offset"), "offset function required for view"
+            self._buf: Any = self.allocator.offset(self.base._buf, self.nbytes, self.offset)
+        else:
+            self._buf = opaque if opaque is not None else self.allocator.alloc(self.nbytes, self.options)
+            if not self.device.startswith("DISK"): GlobalCounters.mem_used += self.nbytes
+        return self
+    def __reduce__(self):
+        buf = None
+        if self._base is not None:
+            return self.__class__, (self.device, self.size, self.dtype, None, None, None, 0, self.base, self.offset, self.is_allocated())
+        if self.device == "NPY": return self.__class__, (self.device, self.size, self.dtype, self._buf, self.options, None, self.lb_refcount)
+        if self.is_allocated():
+            buf = bytearray(self.nbytes)
+            self.copyout(memoryview(buf))
+        return self.__class__, (self.device, self.size, self.dtype, None, self.options, buf, self.lb_refcount)
+    @property
+    def nbytes(self): return self.size*self.dtype.itemsize
+    def __del__(self):
+        if not self.is_allocated(): return
+        if self._base is None and (self.options is None or self.options.external_ptr is None):
+            if not self.device.startswith("DISK"): GlobalCounters.mem_used -= self.nbytes
+            self.allocator.free(self._buf, self.nbytes, self.options)
+    def __repr__(self):
+        return f"<buf real:{self.is_allocated()} device:{self.device} size:{self.size} dtype:{self.dtype}" + \
+               (f" offset:{self.offset}" if hasattr(self, "base") else "") + (f" {self.options=}" if self.options is not None else "") + ">"
+    def as_buffer(self, allow_zero_copy=False, force_zero_copy=False) -> memoryview:
+        if (force_zero_copy or allow_zero_copy) and hasattr(self.allocator, "as_buffer") and (self.options is None or self.options.image is None):
+            return self.allocator.as_buffer(self._buf)
+        assert not force_zero_copy, "force zero copy was passed, but copy is required"
+        return self.copyout(memoryview(bytearray(self.nbytes)))
+    def copyin(self, mv:memoryview):
+        mv = flat_mv(mv)
+        assert len(mv) == self.nbytes, f"size mismatch, {len(mv)=} != {self.dtype=} {self.size=}"
+        assert self.is_allocated(), "can't copyin to unallocated buffer"
+        self.allocator.copyin(self._buf, mv)
+        return self
+    def copyout(self, mv:memoryview) -> memoryview:
+        mv = flat_mv(mv)
+        assert len(mv) == self.nbytes, f"size mismatch, {len(mv)=} != {self.dtype=} {self.size=}"
+        assert self.is_allocated(), "can't copyout unallocated buffer"
+        self.allocator.copyout(mv, self._buf)
+        return mv
+    def view(self, size:int, dtype:DType, offset:int) -> Buffer:
+        assert offset < self.nbytes, "offset must be less than nbytes"
+        if self._base is not None: return Buffer(self.device, size, dtype, base=self._base, offset=self.offset+offset)
+        return Buffer(self.device, size, dtype, base=self, offset=offset)
+
 
 # class TensorCore:
 #     dims: Tuple[int, int, int]
