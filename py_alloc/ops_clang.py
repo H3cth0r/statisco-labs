@@ -1,6 +1,6 @@
 from typing import Optional, Union, Dict, Any, List, Callable
 import os, sqlite3, contextlib, pickle, tempfile, ctypes, subprocess, pathlib, platform, time
-# from source_code import Allocator, MallocAllocator
+from source_code import BufferOptions, ImageDType, PtrDType
 
 def getenv(key: str, default=0): 
     """
@@ -200,6 +200,25 @@ class ClangProgram:
         """
         return cpu_time_execution(lambda: self.fxn(*bufs, *vals), enable=wait)
 
+class Buffer:
+    def __init__(self, device:str, size:int, dtype:DType, opaque:Any=None, options=Optional[BufferOptions]=None,
+                 initial_value=Optional[bytes]=None, lb_refcount=0, base:Optional[Buffer]=None, offset:int=0, preallocate=False):
+        if isinstance(dtype, ImageDType): options = BufferOptions(image=dtype)
+        else: assert isinstance(dtype, DType) and not isinstance(dtype, PtrDType)
+        self.device, self.size, self.dtype, self.options, self.offset = device, size, dtype, options, offset
+        if base is None:
+            assert offset == 0, "base buffers can't have offset"
+            self._base = None
+            self._lb_refcount = lb_refcount
+            if opaque is not None: self.allocate(opaque)
+            if initial_value is not None:
+                self.allocate()
+                self.copyin(memoryview(initial_value))
+        else:
+            assert base._base is None, "base can't have a base"
+            assert device == base.device, "base must have the same device"
+            self._base = base
+        if preallocate: self. allocate()
 
 # class TensorCore:
 #     dims: Tuple[int, int, int]
