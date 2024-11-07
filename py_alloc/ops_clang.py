@@ -1,21 +1,9 @@
+from __future__ import annotations
 from typing import Optional, Union, Dict, Any, List, Callable, ClassVar
 import os, sqlite3, contextlib, pickle, tempfile, ctypes, subprocess, pathlib, platform, time
-from source_code import BufferOptions, ImageDType, PtrDType, MallocAllocator,flat_mv
+from source_code import BufferOptions, DType, ImageDType, PtrDType, MallocAllocator,flat_mv
 from dataclasses import replace
-
-def getenv(key: str, default=0): 
-    """
-    Retrieves an environment variables value, casting it to the same type as
-    default.
-
-    Parameters:
-    - Key (str): The name of the environment variable.
-    - default (Any): default value to return if the variable is not set.
-
-    Returns:
-    - Any: Value of the environment variable of the default.
-    """
-    return type(default)(os.getenv(key, default))
+from helpers import getenv
 
 # Check if the platform is macOs
 OSX = platform.system() == "Darwin"
@@ -211,8 +199,8 @@ class GlobalCounters:
     def reset(): GlobalCounters.global_ops, GlobalCounters.global_mem, GlobalCounters.time_sum_s, GlobalCounters.kernel_count = 0,0,0.0,0
 
 class Buffer:
-    def __init__(self, device:str, size:int, dtype:DType, opaque:Any=None, options=Optional[BufferOptions]=None,
-                 initial_value=Optional[bytes]=None, lb_refcount=0, base:Optional[Buffer]=None, offset:int=0, preallocate=False):
+    def __init__(self, device:str, size:int, dtype:DType, opaque:Any=None, options:Optional[BufferOptions]=None,
+                 initial_value:Optional[bytes]=None, lb_refcount=0, base:Optional[Buffer]=None, offset:int=0, preallocate=False):
         if isinstance(dtype, ImageDType): options = BufferOptions(image=dtype)
         else: assert isinstance(dtype, DType) and not isinstance(dtype, PtrDType)
         self.device, self.size, self.dtype, self.options, self.offset = device, size, dtype, options, offset
@@ -239,7 +227,7 @@ class Buffer:
     def allocate(self, opaque=None, external_ptr=None) -> Buffer:
         assert not self.is_allocated(), "can't allocate already allocated buffer"
         # Maybe this will break
-        self.allocator = MallocAllocator()
+        self.allocator = MallocAllocator
         if external_ptr is not None: 
             self.options = replace(self.options, external_ptr=external_ptr) if self.options else BufferOptions(external_ptr=external_ptr)
         if self._base is not None: 
