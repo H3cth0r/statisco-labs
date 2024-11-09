@@ -11,6 +11,8 @@ in pkgs.mkShell {
     pythonPackages.virtualenv
     pythonPackages.numpy
     pkgs.gdb    # Add gdb here
+    pkgs.cargo
+    pkgs.rustc
   ];
 
   shellHook = ''
