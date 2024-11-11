@@ -13,15 +13,23 @@ def timer(func):
     return wrapper
 
 @timer
-def test_allocation():
-    a = MallocAllocator.alloc(1000)
-    # MallocAllocator.copyin(a, memoryview(bytearray([n, 0, 0, 0])))
+def test():pass
 @timer
-def test_numpy():
-    a = np.zeros(1000)
+def test_allocation(n):
+    a = MallocAllocator.alloc(4)
+    MallocAllocator.copyin(a, memoryview(bytearray([n, 0, 0, 0])))
 
-b = MallocAllocator.alloc(1000)
-MallocAllocator.copyin(b, memoryview(bytearray([3, 0, 0, 0])))
-test_numpy()
-test_allocation()
-test_allocation()
+@timer
+def test_numpy(n): a = np.array([n, 0, 0, 0])
+
+
+# b = MallocAllocator.alloc(1000)
+# MallocAllocator.copyin(b, memoryview(bytearray([3, 0, 0, 0])))
+test()
+# test_numpy()
+test_allocation(34)
+test_allocation(34)
+test_allocation(34)
+test_numpy(34)
+test_numpy(34)
+test_numpy(34)

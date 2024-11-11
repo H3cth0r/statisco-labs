@@ -1,4 +1,7 @@
 
+When running a python function or method for the first time, it takes some time to map it.
+Then by "warming  up" or running the  methods on first instance and  then measuring  their
+execution  time,  we will se that go faster.
 
 ```py
 @dataclass(frozen=True, eq=True)
