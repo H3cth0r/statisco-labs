@@ -1,4 +1,7 @@
 import time
+import MallocAllocator 
+import numpy as np
+
 def timer(func):
     def wrapper(*args, **kwargs):
         start_time = time.time()  # Start the timer
@@ -9,20 +12,24 @@ def timer(func):
         return result
     return wrapper
 
-class One:
-    def __init__(self): pass
-    def sum(self): return 1 + 1
-class _Two:
-    def __init__(self):pass
-    def sum(self): return 1 + 1
-Two = _Two()
+@timer
+def test():pass
+@timer
+def test_allocation():
+    a = MallocAllocator.alloc(4)
+    MallocAllocator.copyin(a, memoryview(bytearray([0]*1542)))
 
 @timer
-def test_one():
-    one = One().sum()
-@timer
-def test_two():
-    one = Two.sum()
-if __name__ == "__main__":
-    test_one()
-    test_two()
+def test_numpy(): a = np.zeros(1542)
+
+
+# b = MallocAllocator.alloc(1000)
+# MallocAllocator.copyin(b, memoryview(bytearray([3, 0, 0, 0])))
+test()
+# test_numpy()
+test_allocation()
+test_allocation()
+test_allocation()
+test_numpy()
+test_numpy()
+test_numpy()
