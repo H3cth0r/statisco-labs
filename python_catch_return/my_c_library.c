@@ -15,3 +15,7 @@ int* create_array(int size) {
     }
     return array; // Return the pointer to the array
 }
+
+void free_array(int* array) {
+    free(array);
+}
