@@ -150,6 +150,4 @@ writing posn:2
 ```
 i.e. you should see the position change from 0 through 7 back to 0 again.
 
-
-
 https://docs.python.org/3.10/library/multiprocessing.shared_memory.html
