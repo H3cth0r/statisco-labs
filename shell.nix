@@ -10,6 +10,7 @@ in pkgs.mkShell {
     pythonPackages.pip
     pythonPackages.virtualenv
     pythonPackages.numpy
+    pythonPackages.cmake
     pkgs.gdb    # Add gdb here
     pkgs.cargo
     pkgs.rustc

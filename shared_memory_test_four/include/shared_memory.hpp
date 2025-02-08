@@ -1,8 +1,20 @@
 #pragma once
+
+// C++ headers
+#include <string>
+#include <stdexcept>
+#include <chrono>
+
+// C headers with C++ wrappers
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+
+// system headers
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <string>
+
 #include "FunctionRegistry.hpp"
 
 struct SharedMemoryHeader {

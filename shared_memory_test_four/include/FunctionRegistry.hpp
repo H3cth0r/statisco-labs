@@ -1,15 +1,32 @@
 #pragma once
+
+// C standard headers
 #include <string>
 #include <vector>
 #include <any>
 #include <map>
 #include <functional>
 #include <typeindex>
+#include <cstring>
 
+// C headers should be included with their C++ versions
+#include <cstddef>
+#include <cstdint>
+
+// function metadata to store type information
 struct FunctionMetadata {
     std::vector<std::type_index> argument_types;
     std::type_index return_type;
     size_t total_size;
+
+    // construct to properly initialize type_index
+    FunctionMetadata() : return_type(typeid(void)) {}
+
+    FunctionMetadata(
+        const std::vector<std::type_index>& args,
+        const std::type_index& ret,
+        size_t size
+    ) : argument_types(args), return_type(ret), total_size(size) {}
 };
 
 class FunctionRegistry {
@@ -38,13 +55,14 @@ class FunctionRegistry {
     public:
         template<typename Ret, typename... Args>
         void register_function(const std::string& name, Ret(*func)(Args...)) {
-            FunctionMetadata metadata;
-            metadata.argument_types   = {std::type_index(typeid(Args))...};
-            metadata.return_type      =  std::type_index(typeid(Ret));
-            metadata.total_size       = (sizeof(Args) + ...) + sizeof(Ret);
+            FunctionMetadata metadata (
+                {std::type_index(typeid(Args))...},
+                std::type_index(typeid(Ret)),
+                (sizeof(Args) + ...) + (std::is_void_v<Ret> ? 0 : sizeof(Ret))
+            );
 
             function_metadata[name]   = metadata;
-            function[name]            = [func](void* args, void* result) {
+            functions[name]           = [func](void* args, void* result) {
                 invoke_helper(func, args, result, std::index_sequence_for<Args...>{});
             };
         }
@@ -62,4 +80,4 @@ class FunctionRegistry {
             }
             return false;
         }
-}
+};

@@ -1,6 +1,9 @@
-#include "FunctionRegistry.hpp"
+// C++ headers first
 #include <vector>
 #include <cstring>
+#include <algorithm>
+
+#include "FunctionRegistry.hpp"
 
 double add_arrays(const double* arr1, const double* arr2, int size) {
     double sum = 0;
