@@ -1,11 +1,15 @@
 import numpy as np
+import time
 from fast_cpp_caller import register_functions, execute_function
 
 # Register all functions
 register_functions()
 
 # Call functions
+timer = time.time()
 result = execute_function("addInts", (5, 3))
+timer = time.time() - timer
+print(f"timer: {timer:.16f}")  # Print full decimal notation
 print("Integer addition:", result)
 
 # Make sure to use float arrays
@@ -16,5 +20,8 @@ arr2 = np.array([4.0, 5.0, 6.0], dtype=np.float64)
 print("Array 1 type:", arr1.dtype)
 print("Array 2 type:", arr2.dtype)
 
+timer = time.time()
 result = execute_function("addArrays", (arr1, arr2))
+timer = time.time() - timer
+print(f"timer: {timer:.16f}")  # Print full decimal notation
 print("Array addition:", result)
