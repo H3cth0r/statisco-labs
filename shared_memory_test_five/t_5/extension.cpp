@@ -144,6 +144,23 @@ static PyObject* execute_function(PyObject* self, PyObject* args) {
     return it->second->execute(func_args);
 }
 
+static PyObject* addIntsF(PyObject* self, PyObject* args) {
+    const char* func_name = "addInts";
+    PyObject* func_args;
+
+    if (!PyArg_ParseTuple(args, "O", &func_args)) {
+        return nullptr;
+    }
+
+    auto it = function_registry.find(func_name);
+    if (it == function_registry.end()) {
+        PyErr_SetString(PyExc_RuntimeError, "Function not found");
+        return nullptr;
+    }
+
+    return it->second->execute(func_args);
+}
+
 // function to register all functions from my_library.hpp
 static PyObject* register_functions(PyObject* self, PyObject* args) {
     // register your functions here
@@ -167,6 +184,9 @@ static PyObject* register_functions(PyObject* self, PyObject* args) {
 // module method definitions
 static PyMethodDef ModuleMethods[] = {
     {"execute_function", execute_function, METH_VARARGS, "Execute a registered function"},
+
+    {"addInts", addIntsF, METH_VARARGS, "add two ints"},
+
     {"register_functions", register_functions, METH_NOARGS, "Register all available functions"},
     {nullptr, nullptr, 0, nullptr}
 };

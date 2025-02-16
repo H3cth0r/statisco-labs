@@ -1,11 +1,10 @@
 import numpy as np
 import time
-from fast_cpp_caller import register_functions, execute_function
+from fast_cpp_caller import register_functions, execute_function, addInts
 
 # Register all functions
 register_functions()
 
-def addInts(*args): return execute_function("addInts", args)
 def addMoreInts(*args): return execute_function("addMoreInts", args)
 
 
@@ -28,7 +27,7 @@ print("="*15)
 
 timer = time.time()
 # result = execute_function("addInts", (5, 3))
-result = addInts(5, 3)
+result = addInts((5, 3))
 timer = time.time() - timer
 print(f"timer: {timer:.16f}")  # Print full decimal notation
 print("Integer addition:", result)
@@ -36,7 +35,7 @@ print("="*15)
 
 timer = time.time()
 # result = execute_function("addInts", (5, 3))
-result = addInts(5, 3)
+result = addInts((5, 3))
 timer = time.time() - timer
 print(f"timer: {timer:.16f}")  # Print full decimal notation
 print("Integer addition:", result)
