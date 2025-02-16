@@ -145,20 +145,36 @@ static PyObject* execute_function(PyObject* self, PyObject* args) {
 }
 
 static PyObject* addIntsF(PyObject* self, PyObject* args) {
-    const char* func_name = "addInts";
-    PyObject* func_args;
-
-    if (!PyArg_ParseTuple(args, "O", &func_args)) {
+    // Get the number of arguments passed
+    Py_ssize_t nargs = PyTuple_Size(args);
+    
+    // Create a new tuple with the actual arguments
+    // Note: we don't need to include the function name since it's hardcoded
+    PyObject* func_args = PyTuple_New(nargs);
+    if (!func_args) {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to create arguments tuple");
         return nullptr;
     }
-
-    auto it = function_registry.find(func_name);
+    
+    // Copy all arguments to the new tuple
+    for (Py_ssize_t i = 0; i < nargs; i++) {
+        PyObject* item = PyTuple_GetItem(args, i);
+        Py_INCREF(item);  // Increment reference count since PyTuple_SetItem steals the reference
+        PyTuple_SetItem(func_args, i, item);
+    }
+    
+    // Find and execute the function
+    auto it = function_registry.find("addInts");
     if (it == function_registry.end()) {
+        Py_DECREF(func_args);
         PyErr_SetString(PyExc_RuntimeError, "Function not found");
         return nullptr;
     }
-
-    return it->second->execute(func_args);
+    
+    // Execute the function and clean up
+    PyObject* result = it->second->execute(func_args);
+    Py_DECREF(func_args);
+    return result;
 }
 
 // function to register all functions from my_library.hpp

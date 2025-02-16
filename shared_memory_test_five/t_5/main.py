@@ -27,7 +27,7 @@ print("="*15)
 
 timer = time.time()
 # result = execute_function("addInts", (5, 3))
-result = addInts((5, 3))
+result = addInts(5, 3)
 timer = time.time() - timer
 print(f"timer: {timer:.16f}")  # Print full decimal notation
 print("Integer addition:", result)
@@ -35,7 +35,7 @@ print("="*15)
 
 timer = time.time()
 # result = execute_function("addInts", (5, 3))
-result = addInts((5, 3))
+result = addInts(5, 3)
 timer = time.time() - timer
 print(f"timer: {timer:.16f}")  # Print full decimal notation
 print("Integer addition:", result)
